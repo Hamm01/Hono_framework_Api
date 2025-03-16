@@ -4,11 +4,11 @@ import z from 'zod'
 
 const app = new Hono()
 
-const authors = [
+const authors: { id: string; name: string; birthday?: Date | null }[] = [
   {
     id: '1',
     name: 'jijlu',
-    brithday: new Date()
+    birthday: new Date()
   },
   {
     id: '2',
@@ -19,6 +19,10 @@ const authors = [
 const createAuthorSchema = z.object({
   name: z.string().min(1),
   birthday: z.coerce.date().optional()
+})
+const updateAuthorSchema = z.object({
+  name: z.string().min(1).optional(),
+  birthday: z.coerce.date().nullable().optional()
 })
 
 app.get('/', c => {
@@ -42,7 +46,32 @@ app.post('/', sValidator('json', createAuthorSchema), c => {
   const author = { id: crypto.randomUUID(), ...data }
   authors.push(author)
 
-  return c.json(author, 201) // 201 for succesfuly save the author
+  return c.json(author, 201) // 201 for sucessfully save the author
+})
+
+app.put('/:id', sValidator('json', updateAuthorSchema), c => {
+  const id = c.req.param('id')
+  const data = c.req.valid('json')
+  // updating the author details
+  let author = authors.find(c => c.id === id)
+  if (author == null) {
+    return c.json({ error: 'Author not exist' }, 404)
+  }
+  authors.map(c => {
+    if (c.id === id) {
+      if (data.name !== undefined) {
+        c.name = data.name
+      }
+      if (data.birthday !== undefined) {
+        c.birthday = data.birthday
+      }
+    }
+    return c
+  })
+  // updating the author details, these are all in memory
+  author = authors.find(c => c.id === id)
+
+  return c.json(author, 201) // 201 for sucessfully save the author
 })
 
 export default app
