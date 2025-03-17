@@ -71,7 +71,20 @@ app.put('/:id', sValidator('json', updateAuthorSchema), c => {
   // updating the author details, these are all in memory
   author = authors.find(c => c.id === id)
 
-  return c.json(author, 201) // 201 for sucessfully save the author
+  return c.json(author)
+})
+
+app.delete('/:id', c => {
+  const id = c.req.param('id')
+
+  // updating the author details
+  let index = authors.findIndex(c => c.id === id)
+  if (index === -1) {
+    return c.json({ error: 'Author not exist' }, 404)
+  }
+  authors.splice(index, 1)
+
+  return c.body(null, 204) // 204 for sucessfully removing the author data
 })
 
 export default app
