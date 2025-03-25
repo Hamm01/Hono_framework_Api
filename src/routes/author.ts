@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import z from 'zod'
 import { db } from '../db/db.ts'
 import { AuthorTable } from '../db/schemas.ts'
+import { eq } from 'drizzle-orm'
 
 const app = new Hono()
 
@@ -32,6 +33,28 @@ app.post('/', sValidator('json', createAuthorSchema), async c => {
   const author = await db.insert(AuthorTable).values(data).returning()
   // Inserting the author in DB
   return c.json(author, 201) // 201 for sucessfully entry
+})
+
+const updateAuthorSchema = z.object({
+  name: z.string().min(1).optional(),
+  birthday: z.coerce.date().nullable().optional()
+})
+
+app.put('/:id', sValidator('json', updateAuthorSchema), async c => {
+  const id = c.req.param('id')
+  const data = c.req.valid('json')
+  // updating the author details
+  const [author] = await db
+    .update(AuthorTable)
+    .set(data)
+    .where(eq(AuthorTable.id, id))
+    .returning()
+  // updating the author details in db
+  if (author == null) {
+    return c.json({ error: 'Author not exist' }, 404)
+  }
+
+  return c.json(author)
 })
 
 export default app
