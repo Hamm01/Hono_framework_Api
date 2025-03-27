@@ -2,7 +2,7 @@ import { sValidator } from '@hono/standard-validator'
 import { Hono } from 'hono'
 import z from 'zod'
 import { db } from '../db/db.ts'
-import { AuthorTable } from '../db/schemas.ts'
+import { AuthorTable } from '../db/schema.ts'
 import { eq } from 'drizzle-orm'
 
 const app = new Hono()
@@ -55,6 +55,15 @@ app.put('/:id', sValidator('json', updateAuthorSchema), async c => {
   }
 
   return c.json(author)
+})
+
+app.delete('/:id', async c => {
+  const id = c.req.param('id')
+
+  //Deleting the author record from the db
+  await db.delete(AuthorTable).where(eq(AuthorTable.id, id))
+
+  return c.body(null, 204) // 204 for sucessfull opreation
 })
 
 export default app
