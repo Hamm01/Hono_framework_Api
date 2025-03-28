@@ -30,7 +30,7 @@ const createAuthorSchema = z.object({
 
 app.post('/', sValidator('json', createAuthorSchema), async c => {
   const data = c.req.valid('json')
-  const author = await db.insert(AuthorTable).values(data).returning()
+  const [author] = await db.insert(AuthorTable).values(data).returning()
   // Inserting the author in DB
   return c.json(author, 201) // 201 for sucessfully entry
 })
@@ -43,6 +43,7 @@ const updateAuthorSchema = z.object({
 app.put('/:id', sValidator('json', updateAuthorSchema), async c => {
   const id = c.req.param('id')
   const data = c.req.valid('json')
+
   // updating the author details
   const [author] = await db
     .update(AuthorTable)
