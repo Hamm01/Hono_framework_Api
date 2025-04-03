@@ -9,7 +9,7 @@ const app = new Hono()
 
 app.route('/authors', authorRoutes)
 app.route('/auth', authRoutes)
-app.route('/api-Key', apiKeyRoutes)
+app.route('/api-Keys', apiKeyRoutes)
 
 serve(
   {
