@@ -25,7 +25,11 @@ async function scryptAsync(password: string, salt: string) {
 
 export function generateApiKey() {
   const raw = randomBytes(32).toString('base64')
-  const hash = createHash('sha256').update(raw).digest('hex')
+  const hash = hashApiKey(raw)
   const prefix = raw.slice(0, 8)
   return { raw, hash, prefix }
+}
+
+export function hashApiKey(key: string) {
+  return createHash('sha256').update(key).digest('hex')
 }
