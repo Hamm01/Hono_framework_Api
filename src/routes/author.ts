@@ -4,6 +4,7 @@ import z from 'zod'
 import { db } from '../db/db.ts'
 import { AuthorTable } from '../db/schema.ts'
 import { eq } from 'drizzle-orm'
+import { apiKeyAuth, type ApiKeyEnv } from '../middleware/auth.ts'
 
 const app = new Hono()
 
@@ -27,8 +28,13 @@ const createAuthorSchema = z.object({
   name: z.string().min(1),
   birthday: z.coerce.date().optional()
 })
+// we are creating the set of protected routes that will all use the same middle ware apikeyAuth
+//By this all the creating , updating and deleting of author
+// will only be done , if user is logged in, and we are getting the x-api-key so then we can create, delete or update author
+const protectedApp = new Hono<ApiKeyEnv>()
+protectedApp.use(apiKeyAuth)
 
-app.post('/', sValidator('json', createAuthorSchema), async c => {
+protectedApp.post('/', sValidator('json', createAuthorSchema), async c => {
   const data = c.req.valid('json')
   const [author] = await db.insert(AuthorTable).values(data).returning()
   // Inserting the author in DB
@@ -40,7 +46,7 @@ const updateAuthorSchema = z.object({
   birthday: z.coerce.date().nullable().optional()
 })
 
-app.put('/:id', sValidator('json', updateAuthorSchema), async c => {
+protectedApp.put('/:id', sValidator('json', updateAuthorSchema), async c => {
   const id = c.req.param('id')
   const data = c.req.valid('json')
 
@@ -58,7 +64,7 @@ app.put('/:id', sValidator('json', updateAuthorSchema), async c => {
   return c.json(author)
 })
 
-app.delete('/:id', async c => {
+protectedApp.delete('/:id', async c => {
   const id = c.req.param('id')
 
   //Deleting the author record from the db
@@ -67,4 +73,5 @@ app.delete('/:id', async c => {
   return c.body(null, 204) // 204 for sucessfull opreation
 })
 
+app.route('/', protectedApp)
 export default app
