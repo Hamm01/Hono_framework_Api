@@ -16,4 +16,12 @@ const createBookSchema = z.object({
   authorId: z.uuid()
 })
 
+const updateBookSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().nullable().optional(),
+  publishDate: z.date().nullable().optional(),
+  pageCount: z.number().int().positive().nullable().optional(),
+  authorId: z.uuid().optional()
+})
+
 export default app
