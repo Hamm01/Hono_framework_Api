@@ -24,4 +24,10 @@ const updateBookSchema = z.object({
   authorId: z.uuid().optional()
 })
 
+app.get('/', async c => {
+  const books = await db.query.BookTable.findMany({ with: { author: true } })
+  //getting all the book list from booktable along with author details
+  return c.json(books)
+})
+
 export default app
