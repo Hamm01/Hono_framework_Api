@@ -30,4 +30,17 @@ app.get('/', async c => {
   return c.json(books)
 })
 
+app.get('/:id', async c => {
+  const id = c.req.param('id')
+  const book = await db.query.BookTable.findFirst({
+    where: { id },
+    with: { author: true }
+  })
+  // finding the book using an id and along with the author information
+  if (book == null) {
+    return c.json({ error: 'Book not found' }, 404)
+  }
+  return c.json(book)
+})
+
 export default app
