@@ -43,4 +43,26 @@ app.get('/:id', async c => {
   return c.json(book)
 })
 
+const protectedApp = new Hono<ApiKeyEnv>()
+protectedApp.use(apiKeyAuth)
+
+protectedApp.post('/', sValidator('json', createBookSchema), async c => {
+  const { id: userId } = c.get('apiKeyUser')
+  const data = c.req.valid('json')
+
+  const author = await db.query.AuthorTable.findFirst({
+    where: { id: data.authorId }
+  })
+  if (author == null) {
+    return c.json({ error: 'Author not found' }, 404)
+  }
+  const [book] = await db
+    .insert(BookTable)
+    .values({ ...data, addedBy: userId })
+    .returning()
+  // Inserting the author in DB
+  return c.json(book, 201) // 201 for sucessfully entry of book in db
+})
+
+app.route('/', protectedApp)
 export default app
