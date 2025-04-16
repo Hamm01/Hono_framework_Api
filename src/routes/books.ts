@@ -64,5 +64,37 @@ protectedApp.post('/', sValidator('json', createBookSchema), async c => {
   return c.json(book, 201) // 201 for sucessfully entry of book in db
 })
 
+protectedApp.put('/:id', sValidator('json', updateBookSchema), async c => {
+  const id = c.req.param('id')
+  const { id: userId, role } = c.get('apiKeyUser')
+  const data = c.req.valid('json')
+
+  if (data.authorId != null) {
+    const author = await db.query.AuthorTable.findFirst({
+      where: { id: data.authorId }
+    })
+    // checking the author id must exist and author is avalaible in db or not
+    if (author == null) {
+      return c.json({ error: 'Author not found' }, 404)
+    }
+  }
+  const whereClause =
+    role === 'admin'
+      ? eq(BookTable.id, id)
+      : and(eq(BookTable.id, id), eq(BookTable.addedBy, userId))
+
+  const [book] = await db
+    .update(BookTable)
+    .set(data)
+    .where(whereClause)
+    .returning()
+
+  if (book == null) {
+    return c.json('Book Not found', 404)
+  }
+
+  return c.json(book)
+})
+
 app.route('/', protectedApp)
 export default app
