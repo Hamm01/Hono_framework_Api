@@ -82,7 +82,7 @@ protectedApp.put('/:id', sValidator('json', updateBookSchema), async c => {
     role === 'admin'
       ? eq(BookTable.id, id)
       : and(eq(BookTable.id, id), eq(BookTable.addedBy, userId))
-
+  // this clause to update book only by admin or user who uploaded that book
   const [book] = await db
     .update(BookTable)
     .set(data)
@@ -94,6 +94,21 @@ protectedApp.put('/:id', sValidator('json', updateBookSchema), async c => {
   }
 
   return c.json(book)
+})
+
+protectedApp.delete('/:id', async c => {
+  const id = c.req.param('id')
+  const { id: userId, role } = c.get('apiKeyUser')
+
+  const whereClause =
+    role === 'admin'
+      ? eq(BookTable.id, id)
+      : and(eq(BookTable.id, id), eq(BookTable.addedBy, userId))
+  // this clause to delete book only by admin or user who uploaded that book
+  //Deleting the Book record from the bookTable in db
+  await db.delete(BookTable).where(whereClause)
+
+  return c.body(null, 204) // 204 for sucessfull opreation
 })
 
 app.route('/', protectedApp)
