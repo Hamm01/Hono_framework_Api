@@ -259,12 +259,11 @@ Content-Type: application/json
 
 ```text
 src/
-├── routes/
-├── controllers/
-├── services/
-├── middleware/
+├── data/
 ├── db/
-├── validators/
+├── lib/
+├── middleware/
+├── routes/
 └── index.ts
 ```
 
